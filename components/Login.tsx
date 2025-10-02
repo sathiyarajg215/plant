@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { LeafIcon, MailIcon, KeyIcon } from './Icons';
+import { LeafIcon, MailIcon, KeyIcon, GoogleIcon, FacebookIcon } from './Icons';
 
 interface LoginProps {
     onLogin: (email: string, password: string) => Promise<boolean>;
+    onSocialLogin: (provider: 'Google' | 'Facebook') => void;
     onNavigateToSignUp: () => void;
     onNavigateToForgotPassword: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToSignUp, onNavigateToForgotPassword }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, onSocialLogin, onNavigateToSignUp, onNavigateToForgotPassword }) => {
     const [email, setEmail] = useState('user@example.com');
     const [password, setPassword] = useState('password123');
     const [error, setError] = useState('');
@@ -95,6 +96,27 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToSignUp, onNav
                             </button>
                         </div>
                     </form>
+
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-300"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="bg-white px-2 text-slate-500">OR</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onClick={() => onSocialLogin('Google')} className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                           <GoogleIcon className="w-5 h-5" />
+                           <span className="text-sm font-medium text-slate-700">Sign in with Google</span>
+                        </button>
+                        <button onClick={() => onSocialLogin('Facebook')} className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                           <FacebookIcon className="w-5 h-5 text-[#1877F2]" />
+                           <span className="text-sm font-medium text-slate-700">Sign in with Facebook</span>
+                        </button>
+                    </div>
+
                      <p className="text-center text-sm text-slate-500 mt-6">
                         Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigateToSignUp(); }} className="font-medium text-emerald-600 hover:underline">Sign up</a>
                     </p>

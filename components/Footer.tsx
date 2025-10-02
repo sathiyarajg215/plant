@@ -1,8 +1,14 @@
-
 import React from 'react';
 import { LeafIcon } from './Icons';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+    onNavigateToOurStory: () => void;
+    onNavigateToContactUs: () => void;
+    onNavigateToFaq: () => void;
+    onNavigateToShipping: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigateToOurStory, onNavigateToContactUs, onNavigateToFaq, onNavigateToShipping }) => {
     return (
         <footer className="bg-emerald-900 text-emerald-200">
             <div className="container mx-auto px-4 py-12">
@@ -26,7 +32,7 @@ export const Footer: React.FC = () => {
                     <div>
                         <h4 className="font-bold text-white mb-4">About Us</h4>
                         <ul className="space-y-2 text-sm">
-                            <li><a href="#" className="hover:text-white">Our Story</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigateToOurStory(); }} className="hover:text-white">Our Story</a></li>
                             <li><a href="#" className="hover:text-white">Careers</a></li>
                             <li><a href="#" className="hover:text-white">Press</a></li>
                         </ul>
@@ -34,9 +40,9 @@ export const Footer: React.FC = () => {
                     <div>
                         <h4 className="font-bold text-white mb-4">Customer Service</h4>
                         <ul className="space-y-2 text-sm">
-                            <li><a href="#" className="hover:text-white">Contact Us</a></li>
-                            <li><a href="#" className="hover:text-white">FAQ</a></li>
-                            <li><a href="#" className="hover:text-white">Shipping & Returns</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigateToContactUs(); }} className="hover:text-white">Contact Us</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigateToFaq(); }} className="hover:text-white">FAQ</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); onNavigateToShipping(); }} className="hover:text-white">Shipping & Returns</a></li>
                         </ul>
                     </div>
                 </div>

@@ -1,258 +1,232 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ProductGrid } from './components/ProductGrid';
 import { ProductDetail } from './components/ProductDetail';
-import { Footer } from './components/Footer';
 import { Cart } from './components/Cart';
+import { Footer } from './components/Footer';
 import { Checkout } from './components/Checkout';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { Login } from './components/Login';
 import { SignUp } from './components/SignUp';
 import { ForgotPassword } from './components/ForgotPassword';
 import { OrderHistory } from './components/OrderHistory';
+import { OurStory } from './components/OurStory';
+import { ContactUs } from './components/ContactUs';
+import { Faq } from './components/Faq';
+import { ShippingReturns } from './components/ShippingReturns';
+
 import { CartProvider, useCart } from './context/CartContext';
 import { Product, User, Order } from './types';
 import { PRODUCTS, CATEGORIES } from './constants';
 import { createOrder } from './services/orderService';
+import { sendOrderConfirmationEmails } from './services/emailService';
 
+// --- Mock Authentication ---
+const MOCK_USERS: User[] = [
+    { id: 1, name: 'Demo User', email: 'user@example.com', password: 'password123' },
+];
 
-type View = 'listing' | 'detail' | 'checkout' | 'confirmation' | 'orderHistory';
-type AuthView = 'login' | 'signup' | 'forgotPassword';
+// This wrapper component is necessary so it can access the cart context provided by CartProvider in App
+const AppComponent: React.FC = () => {
+    type Page = 'home' | 'product' | 'checkout' | 'confirmation' | 'login' | 'signup' | 'forgot_password' | 'order_history' | 'our_story' | 'contact_us' | 'faq' | 'shipping_returns';
+    
+    const [currentPage, setCurrentPage] = useState<Page>('home');
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [isCartOpen, setCartOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeCategory, setActiveCategory] = useState('All');
+    
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-const MOCK_USER: User = { id: 1, email: 'user@example.com', password: 'password123', name: 'Demo User' };
+    const { cartItems, clearCart, totalPrice } = useCart();
 
-function AppContent() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [view, setView] = useState<View>('listing');
-  const [authView, setAuthView] = useState<AuthView>('login');
-  const [users, setUsers] = useState<User[]>([MOCK_USER]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isCartOpen, setCartOpen] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [activeCategory, setActiveCategory] = useState<string>('All');
-  
-  const { cartItems, totalPrice, clearCart } = useCart();
-
-  const handleLogin = async (email: string, password: string): Promise<boolean> => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const user = users.find(u => u.email === email && u.password === password);
-            if (user) {
-                setIsAuthenticated(true);
-                setCurrentUser(user);
-                setView('listing');
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        }, 1000);
-    });
-  };
-
-  const handleSignUp = async (name: string, email: string, password: string): Promise<{ success: boolean; message: string }> => {
-     return new Promise(resolve => {
-        setTimeout(() => {
-            if (users.some(u => u.email === email)) {
-                resolve({ success: false, message: 'An account with this email already exists.' });
-                return;
-            }
-            const newUser: User = {
-                id: users.length + 1,
-                name,
-                email,
-                password
-            };
-            setUsers(prev => [...prev, newUser]);
-            setIsAuthenticated(true);
-            setCurrentUser(newUser);
-            setView('listing');
-
-            console.log(`Simulating sending welcome email to ${email}...`);
-            alert(`Welcome, ${name}! A confirmation has been "sent" to ${email}.`);
-
-
-            resolve({ success: true, message: 'Account created successfully!' });
-        }, 1000);
-    });
-  };
-  
-  const handleForgotPasswordRequest = async (email: string): Promise<void> => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            console.log(`Password reset requested for: ${email}`);
-            resolve();
-        }, 1000);
-    });
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    clearCart();
-    setView('listing');
-    setAuthView('login');
-    setSelectedProduct(null);
-  };
-
-
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    setView('detail');
-    window.scrollTo(0, 0);
-  };
-
-  const handleBackToListing = () => {
-    setSelectedProduct(null);
-    setView('listing');
-  };
-
-  const handleNavigateToCheckout = () => {
-      setCartOpen(false);
-      setView('checkout');
-      window.scrollTo(0, 0);
-  }
-
-  const handleNavigateToOrderHistory = () => {
-    setView('orderHistory');
-    window.scrollTo(0, 0);
-  }
-
-  // --- BACKEND INTEGRATION: CREATE (POST) ---
-  const handleOrderSuccess = async () => {
-      if (!currentUser) return;
-
-      const newOrderData = {
-        date: new Date().toISOString(),
-        total: totalPrice,
-        userId: currentUser.id,
-        items: cartItems.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          quantity: item.quantity,
-          price: item.price
-        }))
-      };
-
-      try {
-        await createOrder(newOrderData);
-        clearCart();
-        setView('confirmation');
+    // Scroll to top on page change
+    useEffect(() => {
         window.scrollTo(0, 0);
-      } catch (error) {
-        console.error("Failed to create order:", error);
-        alert("There was an issue placing your order. Please try again.");
-      }
-  }
+    }, [currentPage, selectedProduct]);
 
-  const handleReturnHome = () => {
-      setSelectedProduct(null);
-      setView('listing');
-  }
+    const handleProductSelect = (product: Product) => {
+        setSelectedProduct(product);
+        setCurrentPage('product');
+    };
 
-  const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter(product => {
-      const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [searchTerm, activeCategory]);
-  
-  const renderContent = () => {
-      switch (view) {
-          case 'listing':
-              return <ProductGrid 
-                        products={filteredProducts} 
-                        onProductSelect={handleProductSelect} 
-                        categories={CATEGORIES}
-                        activeCategory={activeCategory}
-                        setActiveCategory={setActiveCategory}
-                      />;
-          case 'detail':
-              return selectedProduct ? <ProductDetail 
-                                          product={selectedProduct} 
-                                          onBack={handleBackToListing} 
-                                          isAuthenticated={isAuthenticated}
-                                          currentUser={currentUser}
-                                        /> : null;
-          case 'checkout':
-              return <Checkout onOrderPlaced={handleOrderSuccess} onCancel={handleBackToListing} />;
-          case 'confirmation':
-              return <OrderConfirmation onContinueShopping={handleReturnHome} />;
-          case 'orderHistory':
-              return currentUser ? <OrderHistory userId={currentUser.id} onBack={handleBackToListing} /> : null;
-          default:
-            return <ProductGrid 
-                        products={filteredProducts} 
-                        onProductSelect={handleProductSelect} 
-                        categories={CATEGORIES}
-                        activeCategory={activeCategory}
-                        setActiveCategory={setActiveCategory}
-                      />;
-      }
-  }
-
-  if (!isAuthenticated) {
-    switch (authView) {
-        case 'login':
-            return <Login 
-                        onLogin={handleLogin} 
-                        onNavigateToSignUp={() => setAuthView('signup')} 
-                        onNavigateToForgotPassword={() => setAuthView('forgotPassword')}
-                    />;
-        case 'signup':
-            return <SignUp 
-                        onSignUp={handleSignUp} 
-                        onNavigateToLogin={() => setAuthView('login')} 
-                    />;
-        case 'forgotPassword':
-            return <ForgotPassword
-                        onForgotPasswordRequest={handleForgotPasswordRequest}
-                        onNavigateToLogin={() => setAuthView('login')}
-                    />;
-        default:
-            return <Login 
-                        onLogin={handleLogin} 
-                        onNavigateToSignUp={() => setAuthView('signup')}
-                        // FIX: Corrected typo from `setAuthVw` to `setAuthView`.
-                        onNavigateToForgotPassword={() => setAuthView('forgotPassword')}
-                    />;
+    const navigateTo = (page: Page) => {
+        setCurrentPage(page);
     }
-  }
+
+    const resetToHome = () => {
+        setSelectedProduct(null);
+        setActiveCategory('All');
+        setSearchTerm('');
+        setCurrentPage('home');
+    }
+
+    const handleLogin = async (email: string, password: string): Promise<boolean> => {
+        const user = MOCK_USERS.find(u => u.email === email && u.password === password);
+        if (user) {
+            setIsAuthenticated(true);
+            setCurrentUser(user);
+            resetToHome();
+            return true;
+        }
+        return false;
+    };
+
+    const handleSocialLogin = (provider: 'Google' | 'Facebook') => {
+        console.log(`Simulating login with ${provider}...`);
+        // In a real app, this would trigger the OAuth flow.
+        // For this demo, we'll create a mock social user and log them in.
+        const socialUser: User = {
+            id: Date.now(),
+            name: `${provider} User`,
+            email: `socialuser@${provider.toLowerCase()}.com`
+        };
+        setIsAuthenticated(true);
+        setCurrentUser(socialUser);
+        resetToHome();
+    };
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        resetToHome();
+    };
+    
+    const handleSignUp = async (name: string, email: string, password: string): Promise<{ success: boolean; message: string; }> => {
+        if (MOCK_USERS.some(u => u.email === email)) {
+            return { success: false, message: 'An account with this email already exists.' };
+        }
+        const newUser: User = { id: MOCK_USERS.length + 1, name, email, password };
+        MOCK_USERS.push(newUser);
+        setIsAuthenticated(true);
+        setCurrentUser(newUser);
+        resetToHome();
+        return { success: true, message: 'Account created successfully!' };
+    };
+
+    const handleForgotPassword = async (email: string) => {
+        // In a real app, this would trigger a password reset email.
+        console.log(`Password reset requested for: ${email}`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    };
+
+    const handleOrderPlaced = async () => {
+        if (!currentUser) {
+            console.error("Cannot place order without a logged in user.");
+            // Optionally, redirect to login
+            return;
+        }
+
+        const newOrderData: Omit<Order, 'id'> = {
+            userId: currentUser.id,
+            date: new Date().toISOString(),
+            total: totalPrice,
+            items: cartItems.map(item => ({
+                productId: item.id,
+                productName: item.name,
+                quantity: item.quantity,
+                price: item.price
+            }))
+        };
+        
+        try {
+            const createdOrder = await createOrder(newOrderData);
+            // Simulate sending order confirmation emails
+            sendOrderConfirmationEmails(createdOrder, currentUser);
+            clearCart();
+            setCurrentPage('confirmation');
+        } catch (error) {
+            console.error("Failed to create order:", error);
+            // Here you could show an error message to the user
+            alert("There was an error placing your order. Please try again.");
+        }
+    };
+    
+    const filteredProducts = PRODUCTS.filter(product => {
+        const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
+
+    const renderContent = () => {
+        switch (currentPage) {
+            case 'product':
+                return selectedProduct && <ProductDetail product={selectedProduct} onBack={resetToHome} isAuthenticated={isAuthenticated} currentUser={currentUser} />;
+            case 'checkout':
+                return <Checkout onOrderPlaced={handleOrderPlaced} onCancel={() => setCurrentPage('home')} />;
+            case 'confirmation':
+                return <OrderConfirmation onContinueShopping={resetToHome} />;
+            case 'order_history':
+                return currentUser && <OrderHistory userId={currentUser.id} onBack={resetToHome} />;
+            case 'our_story':
+                return <OurStory onBack={resetToHome} />;
+            case 'contact_us':
+                return <ContactUs onBack={resetToHome} />;
+            case 'faq':
+                return <Faq onBack={resetToHome} />;
+            case 'shipping_returns':
+                return <ShippingReturns onBack={resetToHome} />;
+            case 'home':
+            default:
+                return (
+                    <ProductGrid
+                        products={filteredProducts}
+                        onProductSelect={handleProductSelect}
+                        categories={CATEGORIES}
+                        activeCategory={activeCategory}
+                        setActiveCategory={setActiveCategory}
+                    />
+                );
+        }
+    };
+
+    if (!isAuthenticated) {
+        switch (currentPage) {
+            case 'login':
+                return <Login onLogin={handleLogin} onSocialLogin={handleSocialLogin} onNavigateToSignUp={() => navigateTo('signup')} onNavigateToForgotPassword={() => navigateTo('forgot_password')} />;
+            case 'signup':
+                return <SignUp onSignUp={handleSignUp} onSocialSignUp={handleSocialLogin} onNavigateToLogin={() => navigateTo('login')} />;
+            case 'forgot_password':
+                 return <ForgotPassword onForgotPasswordRequest={handleForgotPassword} onNavigateToLogin={() => navigateTo('login')} />;
+            default:
+                 return <Login onLogin={handleLogin} onSocialLogin={handleSocialLogin} onNavigateToSignUp={() => navigateTo('signup')} onNavigateToForgotPassword={() => navigateTo('forgot_password')} />;
+        }
+    }
 
 
-  return (
-    <div className="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col">
-      <Header 
-        user={currentUser}
-        onLogout={handleLogout}
-        onCartClick={() => setCartOpen(true)}
-        onSearchChange={setSearchTerm}
-        searchTerm={searchTerm}
-        onLogoClick={handleReturnHome}
-        onNavigateToOrderHistory={handleNavigateToOrderHistory}
-      />
-      <main className="container mx-auto px-4 py-8 flex-grow">
-        {renderContent()}
-      </main>
-      <Footer />
-      <Cart 
-        isOpen={isCartOpen} 
-        onClose={() => setCartOpen(false)}
-        onCheckout={handleNavigateToCheckout}
-       />
-    </div>
-  );
-}
-
-
-function App() {
     return (
-        <CartProvider>
-            <AppContent />
-        </CartProvider>
-    )
+        <div className="flex flex-col min-h-screen bg-slate-50">
+            <Header
+                onCartClick={() => setCartOpen(true)}
+                onSearchChange={setSearchTerm}
+                searchTerm={searchTerm}
+                onLogoClick={resetToHome}
+                user={currentUser}
+                onLogout={handleLogout}
+                onNavigateToOrderHistory={() => navigateTo('order_history')}
+            />
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+                {renderContent()}
+            </main>
+            <Cart isOpen={isCartOpen} onClose={() => setCartOpen(false)} onCheckout={() => { setCartOpen(false); isAuthenticated ? navigateTo('checkout') : navigateTo('login'); }}/>
+            <Footer 
+                onNavigateToOurStory={() => navigateTo('our_story')}
+                onNavigateToContactUs={() => navigateTo('contact_us')}
+                onNavigateToFaq={() => navigateTo('faq')}
+                onNavigateToShipping={() => navigateTo('shipping_returns')}
+            />
+        </div>
+    );
+};
+
+
+const App: React.FC = () => {
+  return (
+    <CartProvider>
+      <AppComponent />
+    </CartProvider>
+  );
 }
 
 export default App;

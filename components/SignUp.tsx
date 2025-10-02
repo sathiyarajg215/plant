@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { LeafIcon, MailIcon, UserIcon, KeyIcon } from './Icons';
+import { LeafIcon, MailIcon, UserIcon, KeyIcon, GoogleIcon, FacebookIcon } from './Icons';
 
 interface SignUpProps {
     onSignUp: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
+    onSocialSignUp: (provider: 'Google' | 'Facebook') => void;
     onNavigateToLogin: () => void;
 }
 
-export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onNavigateToLogin }) => {
+export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSocialSignUp, onNavigateToLogin }) => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -134,6 +135,27 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onNavigateToLogin }) =
                             </button>
                         </div>
                     </form>
+
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-300"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="bg-white px-2 text-slate-500">OR</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onClick={() => onSocialSignUp('Google')} className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                           <GoogleIcon className="w-5 h-5" />
+                           <span className="text-sm font-medium text-slate-700">Sign up with Google</span>
+                        </button>
+                        <button onClick={() => onSocialSignUp('Facebook')} className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                           <FacebookIcon className="w-5 h-5 text-[#1877F2]" />
+                           <span className="text-sm font-medium text-slate-700">Sign up with Facebook</span>
+                        </button>
+                    </div>
+
                      <p className="text-center text-sm text-slate-500 mt-6">
                         Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigateToLogin(); }} className="font-medium text-emerald-600 hover:underline">Sign in</a>
                     </p>
