@@ -1,0 +1,122 @@
+import { Product } from './types';
+
+export const CATEGORIES = ['All', 'Indoor Plants', 'Outdoor Plants', 'Flowers', 'Seeds'];
+
+export const PRODUCTS: Product[] = [
+  {
+    id: 1,
+    name: 'Monstera Deliciosa',
+    price: 35.00,
+    description: 'A tropical plant famous for its large, glossy, heart-shaped leaves that develop characteristic splits or holes.',
+    category: 'Indoor Plants',
+    imageUrl: 'https://picsum.photos/seed/monstera/600/600',
+    details: {
+      size: 'Medium',
+      light: 'Bright, indirect light',
+      water: 'Water every 1-2 weeks',
+    },
+    reviews: [
+        { id: 1, userName: 'Alice', rating: 5, comment: 'Absolutely stunning plant! Arrived in perfect condition.', date: '2023-10-15' },
+        { id: 2, userName: 'Bob', rating: 4, comment: 'Beautiful, but a little smaller than I expected.', date: '2023-10-12' },
+    ],
+  },
+  {
+    id: 2,
+    name: 'Fiddle Leaf Fig',
+    price: 55.00,
+    description: 'A popular indoor tree featuring large, heavily veined, and glossy violin-shaped leaves that grow upright.',
+    category: 'Indoor Plants',
+    imageUrl: 'https://picsum.photos/seed/fiddleleaf/600/600',
+    details: {
+      size: 'Large',
+      light: 'Bright, consistent light',
+      water: 'When top soil is dry',
+    },
+     reviews: [
+        { id: 3, userName: 'Charlie', rating: 5, comment: 'My new favorite plant! It really makes a statement in my living room.', date: '2023-11-01' },
+    ],
+  },
+  {
+    id: 3,
+    name: 'Lavender Plant',
+    price: 18.00,
+    description: 'Known for its fragrant purple flowers and silvery-green foliage, perfect for gardens and patios.',
+    category: 'Outdoor Plants',
+    imageUrl: 'https://picsum.photos/seed/lavender/600/600',
+    details: {
+      size: 'Small',
+      light: 'Full sun',
+      water: 'Drought-tolerant',
+    },
+  },
+  {
+    id: 4,
+    name: 'Peony Bouquet',
+    price: 45.00,
+    description: 'A stunning bouquet of fresh, lush peonies, known for their large, fragrant, and romantic blooms.',
+    category: 'Flowers',
+    imageUrl: 'https://picsum.photos/seed/peony/600/600',
+    details: {
+      size: '12 stems',
+      light: 'N/A',
+      water: 'Change water daily',
+    },
+  },
+  {
+    id: 5,
+    name: 'Snake Plant',
+    price: 25.00,
+    description: 'An extremely hardy and low-maintenance plant with stiff, upright leaves, ideal for beginners.',
+    category: 'Indoor Plants',
+    imageUrl: 'https://picsum.photos/seed/snakeplant/600/600',
+    details: {
+      size: 'Medium',
+      light: 'Low to bright indirect light',
+      water: 'Allow soil to dry out',
+    },
+     reviews: [
+        { id: 4, userName: 'David', rating: 5, comment: 'Literally unkillable. Perfect for someone like me!', date: '2023-09-20' },
+        { id: 5, userName: 'Eve', rating: 4, comment: 'Very healthy plant, looks great on my shelf.', date: '2023-09-22' },
+        { id: 6, userName: 'Frank', rating: 5, comment: 'Great for air purification. Recommended!', date: '2023-10-05' },
+    ],
+  },
+  {
+    id: 6,
+    name: 'Heirloom Tomato Seeds',
+    price: 4.50,
+    description: 'A packet of non-GMO heirloom tomato seeds, perfect for growing your own delicious and unique tomatoes.',
+    category: 'Seeds',
+    imageUrl: 'https://picsum.photos/seed/tomatoseeds/600/600',
+    details: {
+      size: 'Approx. 50 seeds',
+      light: 'Full sun',
+      water: 'Keep soil moist',
+    },
+  },
+   {
+    id: 7,
+    name: 'Japanese Maple',
+    price: 120.00,
+    description: 'A graceful and delicate deciduous tree, renowned for its beautiful, deeply lobed leaves that turn brilliant colors in the fall.',
+    category: 'Outdoor Plants',
+    imageUrl: 'https://picsum.photos/seed/maple/600/600',
+    details: {
+      size: 'Large',
+      light: 'Partial shade to full sun',
+      water: 'Regularly, especially in heat',
+    },
+  },
+  {
+    id: 8,
+    name: 'Wildflower Seed Mix',
+    price: 12.00,
+    description: 'A vibrant mix of annual and perennial wildflower seeds to create a beautiful, pollinator-friendly meadow.',
+    category: 'Seeds',
+    imageUrl: 'https://picsum.photos/seed/wildflower/600/600',
+    details: {
+      size: 'Covers 100 sq ft',
+      light: 'Full sun',
+      water: 'Water until established',
+    },
+  },
+];
