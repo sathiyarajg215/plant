@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ProductGrid } from './components/ProductGrid';
@@ -146,8 +145,9 @@ const AppComponent: React.FC = () => {
             setCurrentPage('confirmation');
         } catch (error) {
             console.error("Failed to create order:", error);
-            // Here you could show an error message to the user
-            alert("There was an error placing your order. Please try again.");
+            // Show a more detailed error message to the user
+            const errorMessage = error instanceof Error ? error.message : "An unknown server error occurred. Please try again.";
+            alert(`There was an error placing your order.\n\nDetails: ${errorMessage}`);
         }
     };
     

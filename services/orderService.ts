@@ -16,15 +16,21 @@ export const fetchOrderHistory = async (userId: number): Promise<Order[]> => {
     const response = await fetch(`${API_BASE_URL}/orders/user/${userId}`);
 
     if (!response.ok) {
-        throw new Error(`Failed to fetch order history: ${response.statusText}`);
+        let message = `Failed to fetch order history: ${response.statusText}`;
+        try {
+            const errorData = await response.json();
+            message = errorData.message || message;
+        } catch (e) {
+            // Ignore if body is not JSON
+        }
+        throw new Error(message);
     }
 
     const data: Order[] = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching order history:", error);
-    // In a real app, you might want to show a user-friendly error message.
-    return []; // Return an empty array on error to prevent crashes.
+    throw error; // Re-throw for the component to handle.
   }
 };
 
@@ -44,7 +50,14 @@ export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<Order> 
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to create order: ${response.statusText}`);
+            let message = `Failed to create order: ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                message = errorData.message || message;
+            } catch (e) {
+                 // Ignore if body is not JSON
+            }
+            throw new Error(message);
         }
 
         const newOrder: Order = await response.json();

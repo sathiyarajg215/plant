@@ -62,7 +62,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateToOurStory, onNavigate
                             placeholder="sathiyarajg215@gmail.com"
                         />
                         <p className="text-xs text-emerald-400 mt-2">
-                            This is where notifications for new orders will be sent. This demo uses console logs to simulate sending emails.
+                            This email receives order and contact notifications. For this to work, ensure the backend server is running with your <code>RESEND_API_KEY</code> set in the <code>backend/.env</code> file.
                         </p>
                     </div>
                 </div>

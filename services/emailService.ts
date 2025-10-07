@@ -1,59 +1,38 @@
 // --- EMAIL SERVICE ---
-// This service integrates with Resend to send transactional emails.
-// For this to work, you must have a RESEND_API_KEY in your environment variables.
-// If the key is not found, it will fall back to logging emails to the console.
+// This service sends email requests to the application's own backend,
+// which then securely communicates with the Resend API.
 
 import { Order, User } from '../types';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const API_BASE_URL = 'http://localhost:3001/api';
 
 /**
- * Sends an email using the Resend API.
+ * Sends a request to the backend to send an email.
  * @param to The recipient's email address.
  * @param subject The subject of the email.
  * @param htmlContent The HTML body of the email.
- * @returns A promise that resolves to true if the email was sent successfully.
+ * @returns A promise that resolves to true if the backend accepts the request.
  */
 const sendEmail = async (to: string, subject: string, htmlContent: string): Promise<boolean> => {
-    // If the API key is not provided, log to console instead of sending an email.
-    if (!RESEND_API_KEY) {
-        console.groupCollapsed(`[Email Simulation] To: ${to} | Subject: ${subject}`);
-        console.warn(`--- Resend API Key not configured. Simulating email send. ---`);
-        console.log(`FROM: Flora & Form <onboarding@resend.dev>`);
-        console.log(`TO: ${to}`);
-        console.log(`SUBJECT: ${subject}`);
-        console.log(`--- HTML BODY ---`);
-        console.log(htmlContent);
-        console.log(`--------------------`);
-        console.groupEnd();
-        return true; // Assume success for the demo
-    }
-
     try {
-        const response = await fetch('https://api.resend.com/emails', {
+        const response = await fetch(`${API_BASE_URL}/send-email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
             },
-            body: JSON.stringify({
-                from: 'Flora & Form <onboarding@resend.dev>',
-                to: [to],
-                subject: subject,
-                html: htmlContent,
-            }),
+            body: JSON.stringify({ to, subject, htmlContent }),
         });
 
         if (response.ok) {
-            console.log(`Email sent successfully to ${to}`);
+            console.log(`Email request for recipient ${to} was sent to the backend successfully.`);
             return true;
         } else {
             const errorData = await response.json();
-            console.error(`Failed to send email to ${to}:`, response.status, response.statusText, errorData);
+            console.error(`Backend failed to send email to ${to}:`, response.status, response.statusText, errorData);
             return false;
         }
     } catch (error) {
-        console.error('Error sending email via Resend:', error);
+        console.error('Network error while sending email request to backend:', error);
         return false;
     }
 };
