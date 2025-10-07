@@ -19,6 +19,10 @@ const orderSchema = new mongoose.Schema({
 
 // Mongoose automatically adds a unique `_id` field to each order document.
 // The frontend can use this `_id` as the unique order ID. We will alias it to `id`.
+orderSchema.virtual('id').get(function() {
+    return this._id.toHexString();
+});
+
 orderSchema.set('toJSON', {
     virtuals: true,
     versionKey: false,

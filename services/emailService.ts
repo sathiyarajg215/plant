@@ -1,39 +1,73 @@
-// --- MOCK EMAIL SERVICE ---
-// In a real application, this service would integrate with a third-party
-// email provider like Resend, SendGrid, Mailgun, or AWS SES.
-// For this demo, we'll simulate the API call by logging to the console.
+// --- EMAIL SERVICE ---
+// This service integrates with Resend to send transactional emails.
+// For this to work, you must have a RESEND_API_KEY in your environment variables.
+// If the key is not found, it will fall back to logging emails to the console.
 
 import { Order, User } from '../types';
 
-const ADMIN_EMAIL = 'admin@floraandform.com';
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 'YOUR_RESEND_API_KEY_HERE';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-const sendEmail = async (to: string, subject: string, htmlContent: string) => {
-    console.groupCollapsed(`[Email Sent] To: ${to} | Subject: ${subject}`);
-    console.log(`--- SIMULATING EMAIL API CALL (e.g., to Resend) ---`);
-    console.log(`API Key Used: ${RESEND_API_KEY ? RESEND_API_KEY.substring(0, 15) + '...' : 'Not Provided'}`);
-    console.log(`FROM: Flora & Form <noreply@floraandform.com>`);
-    console.log(`TO: ${to}`);
-    console.log(`SUBJECT: ${subject}`);
-    console.log(`--- HTML BODY PREVIEW ---`);
-    console.log(htmlContent);
-    console.log(`-------------------------`);
-    console.groupEnd();
+/**
+ * Sends an email using the Resend API.
+ * @param to The recipient's email address.
+ * @param subject The subject of the email.
+ * @param htmlContent The HTML body of the email.
+ * @returns A promise that resolves to true if the email was sent successfully.
+ */
+const sendEmail = async (to: string, subject: string, htmlContent: string): Promise<boolean> => {
+    // If the API key is not provided, log to console instead of sending an email.
+    if (!RESEND_API_KEY) {
+        console.groupCollapsed(`[Email Simulation] To: ${to} | Subject: ${subject}`);
+        console.warn(`--- Resend API Key not configured. Simulating email send. ---`);
+        console.log(`FROM: Flora & Form <onboarding@resend.dev>`);
+        console.log(`TO: ${to}`);
+        console.log(`SUBJECT: ${subject}`);
+        console.log(`--- HTML BODY ---`);
+        console.log(htmlContent);
+        console.log(`--------------------`);
+        console.groupEnd();
+        return true; // Assume success for the demo
+    }
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return true; // Assume success for the demo
+    try {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+            },
+            body: JSON.stringify({
+                from: 'Flora & Form <onboarding@resend.dev>',
+                to: [to],
+                subject: subject,
+                html: htmlContent,
+            }),
+        });
+
+        if (response.ok) {
+            console.log(`Email sent successfully to ${to}`);
+            return true;
+        } else {
+            const errorData = await response.json();
+            console.error(`Failed to send email to ${to}:`, response.status, response.statusText, errorData);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error sending email via Resend:', error);
+        return false;
+    }
 };
 
 
 /**
- * Simulates sending a contact message and an auto-reply.
+ * Sends a contact message to the admin and an auto-reply to the user.
  * @param name The name of the person sending the message.
  * @param email The email of the person sending the message.
  * @param message The content of the message.
+ * @param adminEmail The email address for the admin to receive the notification.
  * @returns A promise that resolves to true if the messages were "sent" successfully.
  */
-export const sendContactMessage = async (name: string, email: string, message: string): Promise<boolean> => {
+export const sendContactMessage = async (name: string, email: string, message: string, adminEmail: string): Promise<boolean> => {
     const emailWrapper = (title: string, body: string) => `
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
             <div style="background-color: #047857; color: white; padding: 20px; text-align: center;">
@@ -59,7 +93,7 @@ export const sendContactMessage = async (name: string, email: string, message: s
         <h2 style="font-size: 18px; color: #047857; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 20px;">Message</h2>
         <p style="white-space: pre-wrap;">${message}</p>
     `;
-    await sendEmail(ADMIN_EMAIL, adminSubject, emailWrapper('New Contact Form Submission', adminBody));
+    const adminEmailSent = await sendEmail(adminEmail, adminSubject, emailWrapper('New Contact Form Submission', adminBody));
 
     // 2. Send an auto-reply to the customer
     const customerSubject = "We've received your message!";
@@ -68,17 +102,18 @@ export const sendContactMessage = async (name: string, email: string, message: s
         <p>Thank you for contacting Flora & Form. We've received your message and a member of our team will get back to you as soon as possible.</p>
         <p>Best regards,<br>The Flora & Form Team</p>
     `;
-    await sendEmail(email, customerSubject, emailWrapper("We've Received Your Message", customerBody));
+    const customerEmailSent = await sendEmail(email, customerSubject, emailWrapper("We've Received Your Message", customerBody));
 
-    return true;
+    return adminEmailSent && customerEmailSent;
 };
 
 /**
- * Simulates sending an order confirmation email to the customer and a notification to the admin.
+ * Sends an order confirmation email to the customer and a notification to the admin.
  * @param order The successfully created order object.
  * @param user The user who placed the order.
+ * @param adminEmail The email address to send the admin notification to.
  */
-export const sendOrderConfirmationEmails = async (order: Order, user: User) => {
+export const sendOrderConfirmationEmails = async (order: Order, user: User, adminEmail: string) => {
     const emailWrapper = (title: string, body: string) => `
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
             <div style="background-color: #047857; color: white; padding: 20px; text-align: center;">
@@ -140,5 +175,5 @@ export const sendOrderConfirmationEmails = async (order: Order, user: User) => {
         </div>
         <p style="margin-top: 20px;">Please log in to the admin panel to view the full order details and begin fulfillment.</p>
     `;
-    await sendEmail(ADMIN_EMAIL, adminSubject, emailWrapper("New Order Received", adminBody));
+    await sendEmail(adminEmail, adminSubject, emailWrapper("New Order Received", adminBody));
 };

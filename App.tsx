@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ProductGrid } from './components/ProductGrid';
@@ -38,8 +39,15 @@ const AppComponent: React.FC = () => {
     
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [adminEmail, setAdminEmail] = useState(() => {
+        return localStorage.getItem('adminNotificationEmail') || 'your-email@example.com';
+    });
 
     const { cartItems, clearCart, totalPrice } = useCart();
+
+    useEffect(() => {
+        localStorage.setItem('adminNotificationEmail', adminEmail);
+    }, [adminEmail]);
 
     // Scroll to top on page change
     useEffect(() => {
@@ -133,7 +141,7 @@ const AppComponent: React.FC = () => {
         try {
             const createdOrder = await createOrder(newOrderData);
             // Simulate sending order confirmation emails
-            sendOrderConfirmationEmails(createdOrder, currentUser);
+            sendOrderConfirmationEmails(createdOrder, currentUser, adminEmail);
             clearCart();
             setCurrentPage('confirmation');
         } catch (error) {
@@ -162,7 +170,7 @@ const AppComponent: React.FC = () => {
             case 'our_story':
                 return <OurStory onBack={resetToHome} />;
             case 'contact_us':
-                return <ContactUs onBack={resetToHome} />;
+                return <ContactUs onBack={resetToHome} adminEmail={adminEmail} />;
             case 'faq':
                 return <Faq onBack={resetToHome} />;
             case 'shipping_returns':
@@ -215,6 +223,8 @@ const AppComponent: React.FC = () => {
                 onNavigateToContactUs={() => navigateTo('contact_us')}
                 onNavigateToFaq={() => navigateTo('faq')}
                 onNavigateToShipping={() => navigateTo('shipping_returns')}
+                adminEmail={adminEmail}
+                onAdminEmailChange={setAdminEmail}
             />
         </div>
     );

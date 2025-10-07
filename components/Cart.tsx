@@ -10,7 +10,13 @@ interface CartProps {
 }
 
 export const Cart: React.FC<CartProps> = ({ isOpen, onClose, onCheckout }) => {
-  const { cartItems, removeFromCart, updateQuantity, itemCount, totalPrice } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, itemCount, totalPrice, clearCart } = useCart();
+
+  const handleClearCart = () => {
+    if (window.confirm('Are you sure you want to remove all items from your cart?')) {
+        clearCart();
+    }
+  };
 
   return (
     <div className={`fixed inset-0 z-50 transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
@@ -62,6 +68,12 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, onCheckout }) => {
               </div>
               <button onClick={onCheckout} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 transition-colors">
                 Proceed to Checkout
+              </button>
+              <button 
+                onClick={handleClearCart}
+                className="w-full text-center text-slate-500 font-medium mt-3 hover:text-red-600 hover:bg-red-50 py-2 rounded-lg transition-colors"
+              >
+                Clear Cart
               </button>
             </div>
           </Fragment>

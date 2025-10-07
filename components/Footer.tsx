@@ -6,9 +6,11 @@ interface FooterProps {
     onNavigateToContactUs: () => void;
     onNavigateToFaq: () => void;
     onNavigateToShipping: () => void;
+    adminEmail: string;
+    onAdminEmailChange: (email: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigateToOurStory, onNavigateToContactUs, onNavigateToFaq, onNavigateToShipping }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigateToOurStory, onNavigateToContactUs, onNavigateToFaq, onNavigateToShipping, adminEmail, onAdminEmailChange }) => {
     return (
         <footer className="bg-emerald-900 text-emerald-200">
             <div className="container mx-auto px-4 py-12">
@@ -46,6 +48,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateToOurStory, onNavigate
                         </ul>
                     </div>
                 </div>
+
+                <div className="mt-12 border-t border-emerald-800 pt-8">
+                    <h4 className="font-bold text-white mb-4">Admin Settings</h4>
+                    <div className="max-w-md">
+                        <label htmlFor="admin-email" className="block text-sm text-emerald-300 mb-2">Order Notification Email</label>
+                        <input
+                            type="email"
+                            id="admin-email"
+                            value={adminEmail}
+                            onChange={(e) => onAdminEmailChange(e.target.value)}
+                            className="w-full bg-emerald-800 border border-emerald-700 text-white rounded-md px-3 py-2 text-sm focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
+                            placeholder="sathiyarajg215@gmail.com"
+                        />
+                        <p className="text-xs text-emerald-400 mt-2">
+                            This is where notifications for new orders will be sent. This demo uses console logs to simulate sending emails.
+                        </p>
+                    </div>
+                </div>
+
                 <div className="mt-12 border-t border-emerald-800 pt-8 text-center text-sm text-emerald-400">
                     <p>&copy; {new Date().getFullYear()} Flora & Form. All rights reserved.</p>
                 </div>

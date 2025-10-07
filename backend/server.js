@@ -10,8 +10,12 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // --- Middleware ---
-// Enable Cross-Origin Resource Sharing for your frontend to communicate with this server
-app.use(cors({ origin: '*' })); // For development, allow all origins. For production, restrict this to your frontend's URL.
+// A more explicit CORS configuration to handle preflight (OPTIONS) requests, a common cause of "Failed to fetch".
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST'], // Specify allowed methods
+  allowedHeaders: ['Content-Type'], // Specify allowed headers
+}));
 app.use(express.json()); // To parse incoming JSON request bodies
 
 // --- Database Connection ---

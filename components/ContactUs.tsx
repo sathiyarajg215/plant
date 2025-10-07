@@ -1,12 +1,14 @@
+
 import React, { useState } from 'react';
 import { BackIcon, MailIcon, PhoneIcon, MapPinIcon, MessageSquareIcon, UserIcon } from './Icons';
 import { sendContactMessage } from '../services/emailService';
 
 interface ContactUsProps {
     onBack: () => void;
+    adminEmail: string;
 }
 
-export const ContactUs: React.FC<ContactUsProps> = ({ onBack }) => {
+export const ContactUs: React.FC<ContactUsProps> = ({ onBack, adminEmail }) => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
@@ -22,7 +24,7 @@ export const ContactUs: React.FC<ContactUsProps> = ({ onBack }) => {
         }
         setError('');
         setIsLoading(true);
-        const success = await sendContactMessage(name, email, message);
+        const success = await sendContactMessage(name, email, message, adminEmail);
         setIsLoading(false);
         if (success) {
             setIsSent(true);
