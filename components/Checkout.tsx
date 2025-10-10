@@ -1,24 +1,22 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { CreditCardIcon, MailIcon, MapPinIcon, PhoneIcon, UserIcon } from './Icons';
+import { PaymentModal } from './PaymentModal';
+
+const upiLogo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/UPI-Logo-vector.svg/2560px-UPI-Logo-vector.svg.png';
 
 interface CheckoutProps {
     onOrderPlaced: () => void;
     onCancel: () => void;
 }
 
-const paymentLogos = {
-    gpay: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/1200px-Google_Pay_Logo.svg.png',
-    phonepe: 'https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg',
-    paytm: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Paytm_Logo_%28standalone%29.svg/1200px-Paytm_Logo_%28standalone%29.svg.png'
-};
 
 export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) => {
     const { cartItems, totalPrice, itemCount } = useCart();
     const [step, setStep] = useState<'details' | 'payment'>('details');
     const [paymentMethod, setPaymentMethod] = useState<string>('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -61,10 +59,26 @@ export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) =
             alert('Please select a payment method.');
             return;
         }
+
+        if (paymentMethod === 'upi') {
+            setPaymentModalOpen(true);
+            return;
+        }
+
         setIsProcessing(true);
         setTimeout(() => {
             onOrderPlaced();
-        }, 2000); // Simulate network delay
+        }, 2000); // Simulate network delay for card payments
+    };
+    
+    const handleUpiPaymentSuccess = async () => {
+        setPaymentModalOpen(false);
+        setIsProcessing(true);
+        try {
+            await onOrderPlaced();
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const renderDetailsForm = () => (
@@ -88,11 +102,15 @@ export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) =
         <div>
             <h3 className="text-2xl font-serif font-bold text-slate-800 mb-6">Payment Method</h3>
             <div className="space-y-4">
-                {Object.entries(paymentLogos).map(([key, src]) => (
-                    <PaymentOption key={key} id={key} selected={paymentMethod === key} onSelect={setPaymentMethod}>
-                        <img src={src} alt={`${key} logo`} className="h-6" />
-                    </PaymentOption>
-                ))}
+                 <PaymentOption id="upi" selected={paymentMethod === 'upi'} onSelect={setPaymentMethod}>
+                    <div className="flex items-center gap-4">
+                        <img src={upiLogo} alt="UPI Logo" className="h-6" />
+                        <div>
+                            <span className="font-medium">UPI / QR Code</span>
+                            <p className="text-xs text-slate-500">GPay, PhonePe, Paytm & more</p>
+                        </div>
+                    </div>
+                </PaymentOption>
                  <PaymentOption id="card" selected={paymentMethod === 'card'} onSelect={setPaymentMethod}>
                     <div className="flex items-center gap-3">
                         <CreditCardIcon className="w-6 h-6"/>
@@ -124,48 +142,56 @@ export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) =
     );
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-serif font-bold text-emerald-900 mb-2">Checkout</h1>
-                <p className="text-slate-500 max-w-2xl mx-auto">Complete your order by providing your details below.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-                <div className="bg-white p-8 rounded-lg shadow-md">
-                    {step === 'details' ? renderDetailsForm() : renderPayment()}
+        <>
+            <PaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setPaymentModalOpen(false)}
+                totalPrice={totalPrice}
+                onConfirm={handleUpiPaymentSuccess}
+            />
+            <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-emerald-900 mb-2">Checkout</h1>
+                    <p className="text-slate-500 max-w-2xl mx-auto">Complete your order by providing your details below.</p>
                 </div>
-                <div className="bg-white p-8 rounded-lg shadow-md h-fit md:sticky top-28">
-                    <h3 className="text-2xl font-serif font-bold text-slate-800 mb-6 border-b pb-4">Order Summary</h3>
-                    <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
-                        {cartItems.map(item => (
-                            <div key={item.id} className="flex justify-between items-center text-sm">
-                                <div className="flex items-center gap-3">
-                                    <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-md" />
-                                    <div>
-                                        <p className="font-medium text-slate-700">{item.name}</p>
-                                        <p className="text-slate-500">Qty: {item.quantity}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                    <div className="bg-white p-8 rounded-lg shadow-md">
+                        {step === 'details' ? renderDetailsForm() : renderPayment()}
+                    </div>
+                    <div className="bg-white p-8 rounded-lg shadow-md h-fit md:sticky top-28">
+                        <h3 className="text-2xl font-serif font-bold text-slate-800 mb-6 border-b pb-4">Order Summary</h3>
+                        <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
+                            {cartItems.map(item => (
+                                <div key={item.id} className="flex justify-between items-center text-sm">
+                                    <div className="flex items-center gap-3">
+                                        <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-md" />
+                                        <div>
+                                            <p className="font-medium text-slate-700">{item.name}</p>
+                                            <p className="text-slate-500">Qty: {item.quantity}</p>
+                                        </div>
                                     </div>
+                                    <p className="font-medium text-slate-800">${(item.price * item.quantity).toFixed(2)}</p>
                                 </div>
-                                <p className="font-medium text-slate-800">${(item.price * item.quantity).toFixed(2)}</p>
+                            ))}
+                        </div>
+                        <div className="mt-6 border-t pt-6 space-y-3">
+                            <div className="flex justify-between font-medium">
+                                <span className="text-slate-600">Subtotal ({itemCount} items)</span>
+                                <span className="text-slate-800">${totalPrice.toFixed(2)}</span>
                             </div>
-                        ))}
-                    </div>
-                     <div className="mt-6 border-t pt-6 space-y-3">
-                        <div className="flex justify-between font-medium">
-                            <span className="text-slate-600">Subtotal ({itemCount} items)</span>
-                            <span className="text-slate-800">${totalPrice.toFixed(2)}</span>
-                        </div>
-                         <div className="flex justify-between font-medium">
-                            <span className="text-slate-600">Shipping</span>
-                            <span className="text-emerald-600">FREE</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-xl">
-                            <span className="text-slate-800">Total</span>
-                            <span className="text-emerald-700">${totalPrice.toFixed(2)}</span>
+                            <div className="flex justify-between font-medium">
+                                <span className="text-slate-600">Shipping</span>
+                                <span className="text-emerald-600">FREE</span>
+                            </div>
+                            <div className="flex justify-between font-bold text-xl">
+                                <span className="text-slate-800">Total</span>
+                                <span className="text-emerald-700">${totalPrice.toFixed(2)}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -182,8 +208,8 @@ const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label
 
 const PaymentOption: React.FC<{id: string, selected: boolean, onSelect: (id: string) => void, children: React.ReactNode}> = ({id, selected, onSelect, children}) => (
     <div onClick={() => onSelect(id)} className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all ${selected ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}>
-        {children}
-        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? 'border-emerald-500' : 'border-slate-300'}`}>
+        <div className="flex-grow">{children}</div>
+        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ml-4 flex-shrink-0 ${selected ? 'border-emerald-500' : 'border-slate-300'}`}>
             {selected && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>}
         </div>
     </div>

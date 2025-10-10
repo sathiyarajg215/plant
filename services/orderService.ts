@@ -1,4 +1,4 @@
-import { Order } from '../types';
+import { Order, User } from '../types';
 
 // --- BACKEND INTEGRATION POINT ---
 // This file is the designated place for all your backend API calls.
@@ -16,30 +16,24 @@ export const fetchOrderHistory = async (userId: number): Promise<Order[]> => {
     const response = await fetch(`${API_BASE_URL}/orders/user/${userId}`);
 
     if (!response.ok) {
-        let message = `Failed to fetch order history: ${response.statusText}`;
-        try {
-            const errorData = await response.json();
-            message = errorData.message || message;
-        } catch (e) {
-            // Ignore if body is not JSON
-        }
-        throw new Error(message);
+        throw new Error(`Failed to fetch order history: ${response.statusText}`);
     }
 
     const data: Order[] = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching order history:", error);
-    throw error; // Re-throw for the component to handle.
+    // In a real app, you might want to show a user-friendly error message.
+    return []; // Return an empty array on error to prevent crashes.
   }
 };
 
 /**
  * Creates a new order by sending the order data to the backend server.
- * @param orderData The data for the new order.
+ * @param orderData The data for the new order, including user details for email notifications.
  * @returns A promise that resolves to the newly created Order object.
  */
-export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<Order> => {
+export const createOrder = async (orderData: Omit<Order, 'id'> & { user: Pick<User, 'name' | 'email'> }): Promise<Order> => {
     try {
         const response = await fetch(`${API_BASE_URL}/orders`, {
             method: 'POST',
@@ -50,14 +44,7 @@ export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<Order> 
         });
 
         if (!response.ok) {
-            let message = `Failed to create order: ${response.statusText}`;
-            try {
-                const errorData = await response.json();
-                message = errorData.message || message;
-            } catch (e) {
-                 // Ignore if body is not JSON
-            }
-            throw new Error(message);
+            throw new Error(`Failed to create order: ${response.statusText}`);
         }
 
         const newOrder: Order = await response.json();

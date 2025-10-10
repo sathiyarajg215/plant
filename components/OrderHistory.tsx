@@ -23,8 +23,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ userId, onBack }) =>
                 userOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 setOrders(userOrders);
             } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : 'Please ensure the backend server is running correctly.';
-                setError(`Failed to load order history. ${errorMessage}`);
+                setError('Failed to load order history. Please try again later.');
                 console.error(err);
             } finally {
                 setIsLoading(false);

@@ -19,7 +19,6 @@ import { CartProvider, useCart } from './context/CartContext';
 import { Product, User, Order } from './types';
 import { PRODUCTS, CATEGORIES } from './constants';
 import { createOrder } from './services/orderService';
-import { sendOrderConfirmationEmails } from './services/emailService';
 
 // --- Mock Authentication ---
 const MOCK_USERS: User[] = [
@@ -38,15 +37,8 @@ const AppComponent: React.FC = () => {
     
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [adminEmail, setAdminEmail] = useState(() => {
-        return localStorage.getItem('adminNotificationEmail') || 'your-email@example.com';
-    });
 
     const { cartItems, clearCart, totalPrice } = useCart();
-
-    useEffect(() => {
-        localStorage.setItem('adminNotificationEmail', adminEmail);
-    }, [adminEmail]);
 
     // Scroll to top on page change
     useEffect(() => {
@@ -125,7 +117,7 @@ const AppComponent: React.FC = () => {
             return;
         }
 
-        const newOrderData: Omit<Order, 'id'> = {
+        const newOrderData = {
             userId: currentUser.id,
             date: new Date().toISOString(),
             total: totalPrice,
@@ -134,20 +126,21 @@ const AppComponent: React.FC = () => {
                 productName: item.name,
                 quantity: item.quantity,
                 price: item.price
-            }))
+            })),
+            user: {
+                name: currentUser.name,
+                email: currentUser.email,
+            }
         };
         
         try {
-            const createdOrder = await createOrder(newOrderData);
-            // Simulate sending order confirmation emails
-            sendOrderConfirmationEmails(createdOrder, currentUser, adminEmail);
+            await createOrder(newOrderData);
             clearCart();
             setCurrentPage('confirmation');
         } catch (error) {
             console.error("Failed to create order:", error);
-            // Show a more detailed error message to the user
-            const errorMessage = error instanceof Error ? error.message : "An unknown server error occurred. Please try again.";
-            alert(`There was an error placing your order.\n\nDetails: ${errorMessage}`);
+            // Here you could show an error message to the user
+            alert("There was an error placing your order. Please try again.");
         }
     };
     
@@ -170,7 +163,7 @@ const AppComponent: React.FC = () => {
             case 'our_story':
                 return <OurStory onBack={resetToHome} />;
             case 'contact_us':
-                return <ContactUs onBack={resetToHome} adminEmail={adminEmail} />;
+                return <ContactUs onBack={resetToHome} />;
             case 'faq':
                 return <Faq onBack={resetToHome} />;
             case 'shipping_returns':
@@ -223,8 +216,6 @@ const AppComponent: React.FC = () => {
                 onNavigateToContactUs={() => navigateTo('contact_us')}
                 onNavigateToFaq={() => navigateTo('faq')}
                 onNavigateToShipping={() => navigateTo('shipping_returns')}
-                adminEmail={adminEmail}
-                onAdminEmailChange={setAdminEmail}
             />
         </div>
     );

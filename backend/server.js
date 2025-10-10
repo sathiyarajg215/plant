@@ -5,32 +5,32 @@ const cors = require('cors');
 require('dotenv').config(); // This line loads the .env file
 
 const Order = require('./models/orderModel');
+const { sendOrderConfirmationEmails, sendContactInquiryEmails } = require('./services/emailService');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // --- Middleware ---
-// A more explicit CORS configuration to handle preflight (OPTIONS) requests, a common cause of "Failed to fetch".
+// Configure CORS with more specific options to ensure preflight requests (OPTIONS) are handled correctly.
+// This is a common solution for 'Failed to fetch' errors in development.
 app.use(cors({
-  origin: '*', // Allow all origins
-  methods: ['GET', 'POST'], // Specify allowed methods
-  allowedHeaders: ['Content-Type'], // Specify allowed headers
+  origin: '*', // Allow any origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow these HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
 }));
 app.use(express.json()); // To parse incoming JSON request bodies
 
 // --- Database Connection ---
 const MONGODB_URI = process.env.MONGODB_URI;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 // ===================================================================================
 // SETUP INSTRUCTIONS FOR YOUR .env FILE:
 // 1. You should have a file named `.env.example` in this `/backend` directory.
 // 2. Create a copy of that file and rename it to `.env`.
-// 3. Open the new `.env` file and add your secret keys:
-//    - MONGODB_URI: Your actual MongoDB Connection String.
-//    - RESEND_API_KEY: Your key from Resend for sending emails.
+// 3. Open the new `.env` file and replace the placeholder with your actual
+//    MongoDB Connection String. This string is secret and should not be shared.
 //
-// These keys are secret and should not be shared.
+// The server will read your key from the .env file and use it to connect.
 // ===================================================================================
 
 if (!MONGODB_URI) {
@@ -67,10 +67,10 @@ app.get('/api/orders/user/:userId', async (req, res) => {
 // POST: Create a new order
 app.post('/api/orders', async (req, res) => {
     try {
-        const { userId, date, total, items } = req.body;
+        const { userId, date, total, items, user } = req.body;
 
         // Basic validation
-        if (!userId || !date || total === undefined || !items || items.length === 0) {
+        if (!userId || !date || total === undefined || !items || items.length === 0 || !user || !user.name || !user.email) {
             return res.status(400).json({ message: 'Missing required order fields' });
         }
 
@@ -82,6 +82,11 @@ app.post('/api/orders', async (req, res) => {
         });
 
         const savedOrder = await newOrder.save();
+        
+        // Asynchronously send confirmation emails without holding up the response.
+        // The .toJSON() method is used to get virtuals like 'id' from the mongoose object.
+        sendOrderConfirmationEmails(savedOrder.toJSON(), user);
+
         res.status(201).json(savedOrder);
     } catch (error) {
         console.error("Error creating order:", error);
@@ -89,55 +94,22 @@ app.post('/api/orders', async (req, res) => {
     }
 });
 
-// POST: Send an email
-app.post('/api/send-email', async (req, res) => {
-    const { to, subject, htmlContent } = req.body;
-
-    if (!to || !subject || !htmlContent) {
-        return res.status(400).json({ message: 'Missing required email fields' });
-    }
-    
-    // Fallback for development if RESEND_API_KEY is not set
-    if (!RESEND_API_KEY) {
-        console.groupCollapsed(`[Email Simulation] To: ${to} | Subject: ${subject}`);
-        console.warn(`--- RESEND_API_KEY not configured on server. Simulating email send. ---`);
-        console.log(`FROM: Flora & Form <onboarding@resend.dev>`);
-        console.log(`TO: ${to}`);
-        console.log(`SUBJECT: ${subject}`);
-        console.log(`--- HTML BODY ---`);
-        console.log(htmlContent);
-        console.log(`--------------------`);
-        console.groupEnd();
-        return res.status(200).json({ message: 'Email simulated successfully as RESEND_API_KEY is not set.' });
-    }
-
+// POST: Handle contact form submission
+app.post('/api/contact', async (req, res) => {
     try {
-        const response = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-                from: 'Flora & Form <onboarding@resend.dev>',
-                to: [to],
-                subject: subject,
-                html: htmlContent,
-            }),
-        });
-        
-        const data = await response.json();
+        const { name, email, message } = req.body;
 
-        if (response.ok) {
-            console.log(`Email sent successfully via Resend to ${to}`);
-            res.status(200).json({ message: 'Email sent successfully', data });
-        } else {
-            console.error(`Failed to send email to ${to}:`, response.status, response.statusText, data);
-            res.status(response.status).json({ message: 'Failed to send email via Resend', error: data });
+        if (!name || !email || !message) {
+            return res.status(400).json({ message: 'Missing required contact fields' });
         }
+
+        // Asynchronously send emails without holding up the response
+        sendContactInquiryEmails(name, email, message);
+
+        res.status(200).json({ message: 'Message sent successfully' });
     } catch (error) {
-        console.error('Error proxying email to Resend:', error);
-        res.status(500).json({ message: 'Server error while sending email' });
+        console.error("Error handling contact form:", error);
+        res.status(500).json({ message: 'Server error while handling contact form' });
     }
 });
 

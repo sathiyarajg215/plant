@@ -9,8 +9,8 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin, onSocialLogin, onNavigateToSignUp, onNavigateToForgotPassword }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('user@example.com');
+    const [password, setPassword] = useState('password123');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
