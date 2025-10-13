@@ -1,6 +1,6 @@
 import { Product } from './types';
 
-export const CATEGORIES = ['All', 'Indoor Plants', 'Outdoor Plants', 'Flowers', 'Seeds'];
+export const CATEGORIES = ['All', 'Indoor Plants', 'Outdoor Plants', 'Flowers', 'Seeds', 'Pots & Planters'];
 
 export const PRODUCTS: Product[] = [
   {
@@ -117,6 +117,110 @@ export const PRODUCTS: Product[] = [
       size: 'Covers 100 sq ft',
       light: 'Full sun',
       water: 'Water until established',
+    },
+  },
+  {
+    id: 9,
+    name: 'Ixora Mini Dwarf (Pink)',
+    price: 15.00,
+    description: 'A beautiful flowering shrub that produces stunning clusters of pink flowers. Perfect for adding a splash of color to your garden.',
+    category: 'Flowers',
+    imageUrl: 'https://picsum.photos/seed/ixora/600/600',
+    details: {
+        size: 'Small',
+        light: 'Full sun to partial shade',
+        water: 'Regularly, keep soil moist',
+    },
+  },
+  {
+    id: 10,
+    name: 'Adenium Plant (Desert Rose)',
+    price: 20.00,
+    description: 'A succulent plant with a swollen base and striking trumpet-shaped flowers. It is drought-tolerant and loves the sun.',
+    category: 'Outdoor Plants',
+    imageUrl: 'https://picsum.photos/seed/adenium/600/600',
+    details: {
+        size: 'Medium',
+        light: 'Full sun',
+        water: 'Water when soil is dry',
+    },
+  },
+  {
+    id: 11,
+    name: 'Aglaonema Pink Anjamani',
+    price: 22.00,
+    description: 'A stunning indoor plant with vibrant pink and green leaves. It is known for its air-purifying qualities and is easy to care for.',
+    category: 'Indoor Plants',
+    imageUrl: 'https://picsum.photos/seed/aglaonema/600/600',
+    details: {
+        size: 'Medium',
+        light: 'Low to bright indirect light',
+        water: 'Keep soil moist but not waterlogged',
+    },
+  },
+  {
+    id: 12,
+    name: 'Zamia (ZZ) Plant',
+    price: 30.00,
+    description: 'An incredibly hardy plant with glossy, dark green leaves. The ZZ plant is perfect for beginners as it tolerates low light and neglect.',
+    category: 'Indoor Plants',
+    imageUrl: 'https://picsum.photos/seed/zzplant/600/600',
+    details: {
+        size: 'Medium',
+        light: 'Low to bright indirect light',
+        water: 'Drought-tolerant, water sparingly',
+    },
+  },
+  {
+    id: 13,
+    name: 'Coriander Seeds',
+    price: 2.00,
+    description: 'High-quality coriander seeds for growing fresh cilantro in your kitchen garden. Aromatic and easy to grow.',
+    category: 'Seeds',
+    imageUrl: 'https://picsum.photos/seed/coriander/600/600',
+    details: {
+        size: 'Approx. 100 seeds',
+        light: 'Full sun to partial shade',
+        water: 'Keep soil consistently moist',
+    },
+  },
+  {
+    id: 14,
+    name: 'Okra (Lady Finger) Hybrid Seeds',
+    price: 3.00,
+    description: 'Grow your own delicious and nutritious okra with these high-yield hybrid seeds. Perfect for home vegetable gardens.',
+    category: 'Seeds',
+    imageUrl: 'https://picsum.photos/seed/okra/600/600',
+    details: {
+        size: 'Approx. 50 seeds',
+        light: 'Full sun',
+        water: 'Regular watering',
+    },
+  },
+  {
+    id: 15,
+    name: 'Grow Bag (12x12 Inch)',
+    price: 5.00,
+    description: 'Durable and reusable grow bag, perfect for growing vegetables, herbs, and flowers on your balcony or terrace.',
+    category: 'Pots & Planters',
+    imageUrl: 'https://picsum.photos/seed/growbag/600/600',
+    details: {
+        size: '12x12 inches',
+        light: 'N/A',
+        water: 'N/A',
+    },
+  },
+  {
+    id: 16,
+    name: 'Hanging Pot (8 Inch)',
+    price: 8.00,
+    description: 'A stylish and sturdy hanging pot to display your trailing plants. Comes with a hanger and is suitable for both indoor and outdoor use.',
+    category: 'Pots & Planters',
+    imageUrl: 'https://picsum.photos/seed/hangingpot/600/600',
+    details: {
+        size: '8-inch diameter',
+        light: 'N/A',
+        water: 'N/A',
     },
   },
 ];

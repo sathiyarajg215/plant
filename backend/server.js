@@ -11,13 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // --- Middleware ---
-// Configure CORS with more specific options to ensure preflight requests (OPTIONS) are handled correctly.
-// This is a common solution for 'Failed to fetch' errors in development.
-app.use(cors({
-  origin: '*', // Allow any origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow these HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
-}));
+// Enable Cross-Origin Resource Sharing (CORS) for all routes.
+// This is crucial for allowing the frontend (running on a different port)
+// to communicate with this backend server. The default `cors()` configuration
+// is permissive and suitable for development, resolving "Failed to fetch" errors.
+app.use(cors());
 app.use(express.json()); // To parse incoming JSON request bodies
 
 // --- Database Connection ---

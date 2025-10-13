@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { CreditCardIcon, MailIcon, MapPinIcon, PhoneIcon, UserIcon } from './Icons';
+import { CreditCardIcon, MailIcon, MapPinIcon, PhoneIcon, UserIcon, GooglePayLogo, PhonePeLogo } from './Icons';
 import { PaymentModal } from './PaymentModal';
-
-const upiLogo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/UPI-Logo-vector.svg/2560px-UPI-Logo-vector.svg.png';
 
 interface CheckoutProps {
     onOrderPlaced: () => void;
@@ -60,7 +58,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) =
             return;
         }
 
-        if (paymentMethod === 'upi') {
+        if (paymentMethod === 'gpay' || paymentMethod === 'phonepe') {
             setPaymentModalOpen(true);
             return;
         }
@@ -100,15 +98,22 @@ export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) =
 
     const renderPayment = () => (
         <div>
-            <h3 className="text-2xl font-serif font-bold text-slate-800 mb-6">Payment Method</h3>
+            <h3 className="text-2xl font-serif font-bold text-slate-800 mb-4">Payment Method</h3>
+
+            <div className="bg-slate-100/70 p-4 rounded-lg text-center mb-6 border border-slate-200">
+                <p className="text-sm font-medium text-slate-600">Amount to Pay</p>
+                <p className="text-4xl font-bold text-emerald-700 mt-1">${totalPrice.toFixed(2)}</p>
+            </div>
+
             <div className="space-y-4">
-                 <PaymentOption id="upi" selected={paymentMethod === 'upi'} onSelect={setPaymentMethod}>
-                    <div className="flex items-center gap-4">
-                        <img src={upiLogo} alt="UPI Logo" className="h-6" />
-                        <div>
-                            <span className="font-medium">UPI / QR Code</span>
-                            <p className="text-xs text-slate-500">GPay, PhonePe, Paytm & more</p>
-                        </div>
+                 <PaymentOption id="gpay" selected={paymentMethod === 'gpay'} onSelect={setPaymentMethod}>
+                    <div className="flex items-center gap-3 h-8">
+                        <GooglePayLogo className="h-full" />
+                    </div>
+                </PaymentOption>
+                <PaymentOption id="phonepe" selected={paymentMethod === 'phonepe'} onSelect={setPaymentMethod}>
+                    <div className="flex items-center gap-3 h-8">
+                        <PhonePeLogo className="h-full" />
                     </div>
                 </PaymentOption>
                  <PaymentOption id="card" selected={paymentMethod === 'card'} onSelect={setPaymentMethod}>
@@ -133,7 +138,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) =
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         Processing...
                     </div>
-                ) : `Pay $${totalPrice.toFixed(2)}`}
+                ) : `Confirm and Pay`}
             </button>
             <button onClick={() => setStep('details')} className="w-full text-center text-slate-600 font-medium mt-4 hover:text-emerald-700">
                 Back to Details
@@ -148,6 +153,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ onOrderPlaced, onCancel }) =
                 onClose={() => setPaymentModalOpen(false)}
                 totalPrice={totalPrice}
                 onConfirm={handleUpiPaymentSuccess}
+                paymentProvider={paymentMethod}
             />
             <div className="max-w-4xl mx-auto">
                 <div className="text-center mb-12">
